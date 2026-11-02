@@ -1,0 +1,32 @@
+[project]
+name = "strategy-replications"
+version = "0.0.0.9000"
+description = "Replications of E. P. Chan's strategies with pyatl"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Young Geun Kim" }
+]
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pyatl"
+]
+
+[project.scripts]
+atl-strategy = "strategy_replications.cli:main"
+
+[dependency-groups]
+lint = ["ruff==0.17.3"]
+
+[tool.uv.sources]
+pyatl = { git = "https://github.com/algotradelib/pyatl" }
+
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 120
