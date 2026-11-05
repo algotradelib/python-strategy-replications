@@ -12,7 +12,8 @@ authors = [
 dependencies = [
     "numpy>=1.26",
     "pandas>=2.2",
-    "pyatl"
+    "pyatl",
+    "statsmodels>=0.15"
 ]
 
 [project.scripts]
