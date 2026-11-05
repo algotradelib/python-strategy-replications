@@ -6,7 +6,7 @@ import argparse
 
 from . import backtesting
 from .data import load_csv, load_ohlc
-from .momentum import TsMomentum
+from .momentum import CrossSectionalMomentum, TsMomentum
 from .reversion import (
     BollingerBand,
     JohansenLinear,
@@ -19,6 +19,7 @@ from .reversion_intraday import BuyOnGap, IntradayLongShort
 from .statistics import johansen_portfolio, round_half_away
 
 FROM, TO = "2007-01-03", "2011-12-30"  # the period of examples 4.3 and 4.4
+BOOK_WINDOW = "2007-05-15", "2007-12-31"  # the period of example 6.2's figure
 
 
 def pair(strategy, path: str, names: list[str], shorts: bool, cash: str = "100000") -> None:
@@ -56,6 +57,20 @@ def linear_longshort(directory: str, shorts: bool) -> None:
     backtesting.summarize(data, result)
 
 
+def xsmom(directory: str, shorts: bool) -> None:
+    """Example 6.2 over the whole history, then over the book's window with the book's fixed denominator."""
+    data = load_ohlc(directory, "cl")
+    names = list(data.columns)
+    strategy = CrossSectionalMomentum(names)
+    result = backtesting.replay(strategy, data, names, cash="1000000000", shorts=shorts)
+    backtesting.replay_log(strategy.tag, result)
+    backtesting.summarize(data, result)
+    denominator = 2 * strategy.top * strategy.holddays * strategy.scale
+    start, end = BOOK_WINDOW
+    label = f"from {start} to {end}, over 2*{strategy.top}*{strategy.holddays}*{strategy.scale:g}: "
+    backtesting.summarize_fixed(data, result, denominator, start, end, label)
+
+
 def intraday(make, directory: str, shorts: bool, sliced: bool) -> None:
     """Examples 4.1 and 4.4."""
     tables = [load_ohlc(directory, kind) for kind in ("op", "hi", "lo", "cl")]
@@ -83,6 +98,7 @@ STRATEGIES = (
     "linear-longshort",
     "longshort",
     "tsmom",
+    "xsmom",
 )
 
 
@@ -114,6 +130,8 @@ def main(argv: list[str] | None = None) -> int:
             johansen_linear(args.data, shorts)
         case "tsmom":
             pair(TsMomentum(names[0]), args.data, names, shorts, cash="1000000000")
+        case "xsmom":
+            xsmom(args.data, shorts)
         case "linear-longshort":
             linear_longshort(args.data, shorts)
         case "longshort":

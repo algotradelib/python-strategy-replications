@@ -17,7 +17,7 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
   - [ ] Arbitrage between an ETF and Component Stocks
 - Interday Momentum Strategies (chapter 6)
   - [x] Time series momentum (`tsmom`)
-  - [ ] Cross-sectional momentum
+  - [x] Cross-sectional momentum (`xsmom`)
 - Mean Reversion of Currencies and Futures (chapter 5)
   - [ ] Trading Currency Cross-Rates
   - [ ] Trading Futures Calendar Spread

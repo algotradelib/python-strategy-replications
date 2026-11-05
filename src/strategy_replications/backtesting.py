@@ -70,14 +70,14 @@ def replay_log(tag: str, result: pyatl.BacktestResult) -> None:
     print(f"{tag} replayed: {result.bars} bars and filled {len(result.fills['time'])} orders.")
 
 
-def _report(ret: np.ndarray) -> None:
+def _report(ret: np.ndarray, label: str = "") -> None:
     apr = np.prod(1 + ret) ** (252.0 / len(ret)) - 1
     sharpe = ret.mean() * np.sqrt(252.0 * (len(ret) - 1.0)) / np.linalg.norm(ret - ret.mean())
-    print(f"apr={apr:.6g}, sharpe={sharpe:.6g}")
+    print(f"{label}apr={apr:.6g}, sharpe={sharpe:.6g}")
 
 
-def summarize(prices: pd.DataFrame, result: pyatl.BacktestResult) -> None:
-    """The book's figures: each day's return is the dollar change of the positions held over the gross position."""
+def _positions(prices: pd.DataFrame, result: pyatl.BacktestResult) -> pd.DataFrame:
+    """The dollars held in each instrument at each close, from the fills."""
     fills = pd.DataFrame(result.fills)
     fills["shares"] = fills["quantity"].where(fills["side"] == "buy", -fills["quantity"])
     # A fill is held from the close that decided it: its time is at most the next date.
@@ -91,10 +91,30 @@ def summarize(prices: pd.DataFrame, result: pyatl.BacktestResult) -> None:
         .cumsum()
         .set_axis(prices.index)
     )
-    positions = (held * prices).fillna(0.0)
-    pnl = (positions.shift() * prices.pct_change(fill_method=None).fillna(0.0)).sum(axis=1)
-    ret = (pnl / positions.shift().abs().sum(axis=1)).iloc[1:].fillna(0.0)
+    return (held * prices).fillna(0.0)
+
+
+def _pnl(prices: pd.DataFrame, positions: pd.DataFrame) -> pd.Series:
+    """Each day's dollar change of the positions held from the close before."""
+    return (positions.shift() * prices.pct_change(fill_method=None).fillna(0.0)).sum(axis=1)
+
+
+def summarize(prices: pd.DataFrame, result: pyatl.BacktestResult) -> None:
+    """The book's figures: each day's return is the dollar change of the positions held over the gross position."""
+    positions = _positions(prices, result)
+    ret = (_pnl(prices, positions) / positions.shift().abs().sum(axis=1)).iloc[1:].fillna(0.0)
     _report(ret.to_numpy())
+
+
+def summarize_fixed(
+    prices: pd.DataFrame, result: pyatl.BacktestResult, denominator: float, start: str, end: str, label: str
+) -> None:
+    """The book's figures over the days from `start` to `end`: each day's dollar change over a fixed `denominator`.
+
+    The replay runs over the whole history, so the positions on `start` are those the history built.
+    """
+    ret = (_pnl(prices, _positions(prices, result)) / denominator).loc[start:end]
+    _report(ret.to_numpy(), label)
 
 
 def summarize_intraday(close: pd.DataFrame, result: pyatl.BacktestResult, capital: float, t_start: int) -> None:
