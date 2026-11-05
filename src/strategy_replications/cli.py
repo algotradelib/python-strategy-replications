@@ -7,8 +7,16 @@ import argparse
 from . import backtesting
 from .data import load_csv, load_ohlc
 from .momentum import TsMomentum
-from .reversion import BollingerBand, KalmanReversion, LinearLongShort, LinearReversion, LinearSpread
+from .reversion import (
+    BollingerBand,
+    JohansenLinear,
+    KalmanReversion,
+    LinearLongShort,
+    LinearReversion,
+    LinearSpread,
+)
 from .reversion_intraday import BuyOnGap, IntradayLongShort
+from .statistics import johansen_portfolio, round_half_away
 
 FROM, TO = "2007-01-03", "2011-12-30"  # the period of examples 4.3 and 4.4
 
@@ -20,6 +28,20 @@ def pair(strategy, path: str, names: list[str], shorts: bool, cash: str = "10000
         if name not in data.columns:
             raise SystemExit(f"atl-strategy: {path} has no column {name!r} (it has {', '.join(data.columns)})")
     result = backtesting.replay(strategy, data, names, cash=cash, shorts=shorts)
+    backtesting.replay_log(strategy.tag, result)
+    backtesting.summarize(data, result)
+
+
+def johansen_linear(path: str, shorts: bool) -> None:
+    """Example 2.8, on every column of the file, in its order."""
+    data = load_csv(path)
+    names = list(data.columns)
+    weights, half_life = johansen_portfolio(data)
+    lookback = int(round_half_away(half_life))
+    print(f"eigenvector={[float(weight) for weight in weights]!r} ({', '.join(names)})")
+    print(f"half-life={half_life!r}, lookback={lookback} (both estimated on the whole file: the figure looks ahead)")
+    strategy = JohansenLinear(names, weights, lookback, scale=100000)
+    result = backtesting.replay(strategy, data, names, shorts=shorts)
     backtesting.replay_log(strategy.tag, result)
     backtesting.summarize(data, result)
 
@@ -56,6 +78,7 @@ STRATEGIES = (
     "ratio",
     "bollinger",
     "kalman",
+    "johansen-linear",
     "bog",
     "linear-longshort",
     "longshort",
@@ -87,6 +110,8 @@ def main(argv: list[str] | None = None) -> int:
             pair(BollingerBand(names[0], names[1], scale=1000), args.data, names, shorts)
         case "kalman":
             pair(KalmanReversion(names[0], names[1], scale=1000), args.data, names, shorts)
+        case "johansen-linear":
+            johansen_linear(args.data, shorts)
         case "tsmom":
             pair(TsMomentum(names[0]), args.data, names, shorts, cash="1000000000")
         case "linear-longshort":

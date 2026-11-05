@@ -6,7 +6,7 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
   - [ ] Augmented Dickey-Fuller Test
   - [ ] Hurst Exponent and Variance Ratio Test
   - [ ] Half-life of Mean Reversion
-  - [ ] Cointegration and Johansen Test for Cointegration
+  - [x] Cointegration and Johansen Test for Cointegration (`johansen-linear`: the eigenvector and the lookback are estimated on the whole file, so its figure looks ahead)
 - Mean Reversion Strategies (chapter 3)
   - [x] Linear mean-reverting (`linear`, `linear-log`, `ratio`)
   - [x] Bollinger Bands (`bollinger`)

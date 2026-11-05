@@ -111,6 +111,34 @@ class LinearReversion:
         target(ctx, self.x, shares_x)
 
 
+class JohansenLinear:
+    """Example 2.8: hold minus the z-score of the portfolio the Johansen eigenvector weights, `scale` shares a unit.
+
+    Each instrument's position is the units times its weight times `scale`, not divided by its price.
+    The weights and the lookback come from the whole history (`statistics.johansen_portfolio`), so the figure looks ahead.
+    """
+
+    def __init__(self, universe: list[str], weights, lookback: int, scale: float = 100000) -> None:
+        self.universe, self.weights = universe, np.asarray(weights)
+        self.lookback, self.scale = lookback, scale
+        self.tag = "johansen-linear"
+        self.portfolio: list[float] = []
+
+    def on_bars(self, ctx, bars) -> None:
+        close = {bar.symbol: bar.close for bar in bars}
+        if any(symbol not in close for symbol in self.universe) or self.lookback < 2:
+            return
+        self.portfolio.append(float(self.weights @ np.array([close[symbol] for symbol in self.universe])))
+        if len(self.portfolio) < self.lookback:
+            return  # warm-up
+        mean, sd = mean_sd(self.portfolio[-self.lookback :])
+        if not sd > 0:
+            return
+        units = -(self.portfolio[-1] - mean) / sd
+        for symbol, weight in zip(self.universe, self.weights, strict=True):
+            target(ctx, symbol, units * weight * self.scale)
+
+
 class BollingerBand:
     """Example 3.2: enter when the spread's z-score leaves `entry` deviations, leave when it crosses `exit`."""
 

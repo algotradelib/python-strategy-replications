@@ -1,10 +1,13 @@
-"""The regression, the z-score and the Kalman filter the strategies use, with NumPy."""
+"""The regressions, the z-score, the Johansen test and the Kalman filter the strategies use, with NumPy and statsmodels."""
 
 from __future__ import annotations
 
 import math
+import warnings
 
 import numpy as np
+import statsmodels.api as sm
+from statsmodels.tsa.vector_ar.vecm import coint_johansen
 
 
 def hedge_ratio(y, x) -> float:
@@ -28,6 +31,23 @@ def round_half_away(value):
 def shares(value: float) -> int | None:
     """A position in whole shares, or None when the value is not finite (nothing is stated)."""
     return int(round_half_away(value)) if math.isfinite(value) else None
+
+
+def half_life(series) -> float:
+    """The half-life of mean reversion, `-ln 2 / b` from the least-squares fit of `p - p[-1] = a + b p[-1]`."""
+    p = np.asarray(series)
+    slope = sm.OLS(np.diff(p), sm.add_constant(p[:-1])).fit().params[1]
+    return float(-math.log(2) / slope)
+
+
+def johansen_portfolio(prices) -> tuple[np.ndarray, float]:
+    """The first Johansen eigenvector (a constant, one lagged difference), as statsmodels returns it, and its half-life."""
+    with warnings.catch_warnings():
+        # statsmodels' eigenvectors come out complex with zero imaginary parts, and it warns as it drops them.
+        warnings.simplefilter("ignore", np.exceptions.ComplexWarning)
+        evec = coint_johansen(np.asarray(prices), det_order=0, k_ar_diff=1).evec
+    weights = np.real_if_close(evec[:, 0])
+    return weights, half_life(np.asarray(prices) @ weights)
 
 
 class KalmanFilter:
