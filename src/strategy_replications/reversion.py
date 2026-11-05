@@ -7,7 +7,7 @@ from enum import Enum
 
 import numpy as np
 
-from .statistics import KalmanFilter, hedge_ratio, mean_sd, shares
+from .statistics import KalmanFilter, hedge_ratio, mean_sd, round_half_away, shares
 
 # Bars kept per instrument, as the C++ replay's series capacity.
 HISTORY = 512
@@ -24,7 +24,7 @@ def state_targets(ctx, universe: list[str], wanted: np.ndarray, held: np.ndarray
     """States every finite position, in whole shares, that differs from the last one stated; updates `held`."""
     finite = np.isfinite(wanted)
     rounded = held.copy()
-    rounded[finite] = np.rint(wanted[finite])
+    rounded[finite] = round_half_away(wanted[finite])
     for i in np.flatnonzero(rounded != held):
         held[i] = rounded[i]
         ctx.target(universe[i], int(rounded[i]))

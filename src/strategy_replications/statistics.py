@@ -19,9 +19,15 @@ def mean_sd(window) -> tuple[float, float]:
     return float(values.mean()), float(values.std(ddof=1))
 
 
+def round_half_away(value):
+    """Rounds to whole numbers, half away from zero, as C++'s `std::round` (Python's `round` and `np.rint` go to even)."""
+    whole = np.trunc(value)
+    return np.where(np.abs(value - whole) >= 0.5, whole + np.sign(value), whole)
+
+
 def shares(value: float) -> int | None:
     """A position in whole shares, or None when the value is not finite (nothing is stated)."""
-    return round(value) if math.isfinite(value) else None
+    return int(round_half_away(value)) if math.isfinite(value) else None
 
 
 class KalmanFilter:
