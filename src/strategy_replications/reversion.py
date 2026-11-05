@@ -115,7 +115,7 @@ class JohansenLinear:
     """Example 2.8: hold minus the z-score of the portfolio the Johansen eigenvector weights, `scale` shares a unit.
 
     Each instrument's position is the units times its weight times `scale`, not divided by its price.
-    The weights and the lookback come from the whole history (`statistics.johansen_portfolio`), so the figure looks ahead.
+    The weights and the lookback come from the whole history (`johansen_portfolio`), so the figure looks ahead.
     """
 
     def __init__(self, universe: list[str], weights, lookback: int, scale: float = 100000) -> None:

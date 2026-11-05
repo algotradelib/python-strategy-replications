@@ -13,9 +13,11 @@ from .statistics import round_half_away
 class OpeningGap:
     """Example 7.1 (`gapFutures_FSTX.m`): trade against the opening gap of one future; out at the close.
 
-    Sell when the open is at or above yesterday's high by `entry` deviations of the daily returns; buy when it is at or below yesterday's low by as much.
-    The deviation is the population one (the MATLAB's `smartstd`) of the last `window` close-to-close returns up to yesterday, over those that exist.
-    A position is `capital` at the open, in whole units; when both tests hold (a zero deviation), the purchase wins.
+    Sell when the open is at or above yesterday's high by `entry` deviations of the daily returns.
+    Buy when it is at or below yesterday's low by as much; when both hold (a zero deviation), the purchase wins.
+    The deviation is the population one (the MATLAB's `smartstd`) of the finite returns among the last `window`.
+    The returns are close to close, up to yesterday.
+    A position is `capital` at the open, in whole units.
     """
 
     def __init__(self, instrument: str, entry: float = 0.1, window: int = 90, capital: float = 1_000_000_000) -> None:
@@ -63,12 +65,13 @@ class OpeningGap:
 
 
 class PostEarningsDrift:
-    """Example 7.2 (`pead.py`): on a stock's announcement day, trade in the direction of its opening gap; out at the close.
+    """Example 7.2 (`pead.py`): trade a stock's opening gap on its announcement day, with the gap; out at the close.
 
-    Buy when the return from the last close to the open is at least `entry` deviations of such returns; sell short when it is at most minus that.
-    The deviation is the sample one of the last `lookback` returns, today's included, and exists only when all of them do.
-    The replay holds only the days the announcements and the prices share, so the last close is that of the previous such day, as in the port.
-    A position is `capital / slots` dollars at the open, in whole shares; when both tests hold (a zero deviation), the short wins, as in the port.
+    Buy when the return from the last close to the open is at least `entry` deviations of such returns.
+    Sell short when it is at most minus that; when both hold (a zero deviation), the short wins, as in the port.
+    The deviation is the sample one of the last `lookback` returns, today's included, and needs all of them.
+    The replay holds only the days the announcements and the prices share, as the port's join does.
+    A position is `capital / slots` dollars at the open, in whole shares.
     """
 
     def __init__(

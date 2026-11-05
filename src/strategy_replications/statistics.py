@@ -1,4 +1,4 @@
-"""The regressions, the z-score, the Johansen test and the Kalman filter the strategies use, with NumPy and statsmodels."""
+"""The regressions, the z-score, the Johansen test and the Kalman filter the strategies use."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def mean_sd(window) -> tuple[float, float]:
 
 
 def round_half_away(value):
-    """Rounds to whole numbers, half away from zero, as C++'s `std::round` (Python's `round` and `np.rint` go to even)."""
+    """Rounds half away from zero, as C++'s `std::round` (Python's `round` and `np.rint` round half to even)."""
     whole = np.trunc(value)
     return np.where(np.abs(value - whole) >= 0.5, whole + np.sign(value), whole)
 
@@ -41,7 +41,7 @@ def half_life(series) -> float:
 
 
 def johansen_portfolio(prices) -> tuple[np.ndarray, float]:
-    """The first Johansen eigenvector (a constant, one lagged difference), as statsmodels returns it, and its half-life."""
+    """The first Johansen eigenvector (a constant, one lagged difference), as statsmodels has it, and its half-life."""
     with warnings.catch_warnings():
         # statsmodels' eigenvectors come out complex with zero imaginary parts, and it warns as it drops them.
         warnings.simplefilter("ignore", np.exceptions.ComplexWarning)

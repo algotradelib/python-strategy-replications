@@ -33,9 +33,9 @@ class TsMomentum:
 
 
 class CrossSectionalMomentum:
-    """Example 6.2: each close, a long unit for the `top` stocks with the best `lookback` return, a short one for the worst.
+    """Example 6.2: each close, a long unit for the `top` best `lookback` returns, a short one for the `top` worst.
 
-    A stock holds the sum of its units of the last `holddays - 1` closes, as the book's Python port does.
+    A stock holds the sum of its units of the last `holddays - 1` closes, as in the book's Python port.
     A unit is `scale` dollars, restated in whole shares at every close.
     Only the stocks with a close today and `lookback` days before are ranked, ties in the universe's order.
     """
