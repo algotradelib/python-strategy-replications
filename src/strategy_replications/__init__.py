@@ -1,6 +1,7 @@
 """Replications of E. P. Chan (2013), *Algorithmic Trading*, as pyatl strategies."""
 
 from .momentum import CrossSectionalMomentum, TsMomentum
+from .momentum_intraday import OpeningGap, PostEarningsDrift
 from .reversion import BollingerBand, JohansenLinear, KalmanReversion, LinearLongShort, LinearReversion, LinearSpread
 from .reversion_intraday import BuyOnGap, IntradayLongShort
 
@@ -14,5 +15,7 @@ __all__ = [
     "LinearLongShort",
     "LinearReversion",
     "LinearSpread",
+    "OpeningGap",
+    "PostEarningsDrift",
     "TsMomentum",
 ]

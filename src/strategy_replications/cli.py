@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
+
+import numpy as np
 
 from . import backtesting
 from .data import load_csv, load_ohlc
 from .momentum import CrossSectionalMomentum, TsMomentum
+from .momentum_intraday import OpeningGap, PostEarningsDrift
 from .reversion import (
     BollingerBand,
     JohansenLinear,
@@ -84,6 +88,32 @@ def intraday(make, directory: str, shorts: bool, sliced: bool) -> None:
     backtesting.summarize_intraday(close, result, strategy.capital, t_start)
 
 
+def gap(path: str, shorts: bool) -> None:
+    """Example 7.1, on one instrument's `Date,Open,High,Low,Close` file, named after the file."""
+    data = load_csv(path)
+    symbol = Path(path).stem
+    tables = [data[[field]].set_axis([symbol], axis=1) for field in ("Open", "High", "Low", "Close")]
+    strategy = OpeningGap(symbol)
+    result = backtesting.replay_intraday(strategy, *tables, shorts=shorts)
+    backtesting.replay_log(strategy.tag, result)
+    backtesting.summarize_intraday(tables[-1], result, strategy.capital, 0)
+
+
+def pead(directory: str, shorts: bool) -> None:
+    """Example 7.2, over the days `earnannFile.csv` and the stock tables share."""
+    tables = [load_ohlc(directory, kind) for kind in ("op", "hi", "lo", "cl")]
+    announced = load_csv(Path(directory) / "earnannFile.csv")
+    days = tables[-1].index.intersection(announced.index)
+    tables = [table.loc[days] for table in tables]
+    close = tables[-1]
+    flags = announced.loc[days, close.columns].to_numpy() != 0
+    by_day = dict(zip(days.to_numpy().astype("datetime64[ns]").view(np.int64), flags, strict=True))
+    strategy = PostEarningsDrift(list(close.columns), by_day)
+    result = backtesting.replay_intraday(strategy, *tables, shorts=shorts)
+    backtesting.replay_log(strategy.tag, result)
+    backtesting.summarize_intraday(close, result, strategy.capital, 0)
+
+
 # The columns each strategy takes from --vars; the stock examples take none.
 VARS = {"linear": 2, "linear-log": 2, "ratio": 2, "bollinger": 2, "kalman": 2, "tsmom": 1}
 
@@ -99,6 +129,8 @@ STRATEGIES = (
     "longshort",
     "tsmom",
     "xsmom",
+    "gap",
+    "pead",
 )
 
 
@@ -138,4 +170,8 @@ def main(argv: list[str] | None = None) -> int:
             intraday(IntradayLongShort, args.data, shorts, sliced=True)
         case "bog":
             intraday(BuyOnGap, args.data, shorts, sliced=False)
+        case "gap":
+            gap(args.data, shorts)
+        case "pead":
+            pead(args.data, shorts)
     return 0

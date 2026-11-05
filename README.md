@@ -18,6 +18,9 @@ Replications of [Ernest P. Chan (2013), *Algorithmic Trading: Winning Strategies
 - Interday Momentum Strategies (chapter 6)
   - [x] Time series momentum (`tsmom`)
   - [x] Cross-sectional momentum (`xsmom`)
+- Intraday Momentum Strategies (chapter 7)
+  - [x] Opening Gap Strategy (`gap`)
+  - [x] Post-Earnings Announcement Drift (`pead`)
 - Mean Reversion of Currencies and Futures (chapter 5)
   - [ ] Trading Currency Cross-Rates
   - [ ] Trading Futures Calendar Spread

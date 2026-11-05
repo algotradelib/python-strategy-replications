@@ -118,10 +118,14 @@ def summarize_fixed(
 
 
 def summarize_intraday(close: pd.DataFrame, result: pyatl.BacktestResult, capital: float, t_start: int) -> None:
-    """The book's figures for a strategy flat every night: each day's change in equity over the capital."""
+    """The book's figures for a strategy flat every night: each day's change in equity over the capital.
+
+    The days from `t_start` on are scored; the first day's change is from the opening equity.
+    """
     times = np.asarray(result.equity["time"])
     ends = (close.index + pd.Timedelta(days=1)).to_numpy().astype("datetime64[ns]").view(np.int64)
     last = np.searchsorted(times, ends, side="right") - 1  # the last equity point by each day's end
-    level = pd.Series(np.where(last >= 0, np.asarray(result.equity["equity"])[last], capital))
-    ret = (level - level.shift(fill_value=capital)) / capital
+    opening = float(result.opening_equity)
+    level = pd.Series(np.where(last >= 0, np.asarray(result.equity["equity"])[last], opening))
+    ret = (level - level.shift(fill_value=opening)) / capital
     _report(ret.iloc[t_start:].to_numpy())
