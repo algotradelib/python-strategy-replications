@@ -209,7 +209,7 @@ wheels = [
 [[package]]
 name = "pyatl"
 version = "0.0.0.9000"
-source = { git = "https://github.com/algotradelib/pyatl#7aa4836b4dda110a4537eb370b29558ceaa0ca38" }
+source = { git = "https://github.com/algotradelib/pyatl#ef54dcf0e9fdb1daf8a0bf679e4ae818fb9dba82" }
 dependencies = [
     { name = "numpy" },
 ]
