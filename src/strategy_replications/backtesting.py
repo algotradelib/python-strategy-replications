@@ -12,7 +12,7 @@ def replay(
 ) -> pyatl.BacktestResult:
     """Replays daily closes, each bar's open, high and low set to its close.
 
-    A market order decided at close t fills at close t (`fill="decision-close"`), the book's convention.
+    A market order decided at close t is priced at close t (`fill="decision-close"`), the book's convention.
     """
     c = closes[names].to_numpy()
     day, at = np.nonzero(~np.isnan(c))  # in time order, then in the order of names
