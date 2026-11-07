@@ -10,22 +10,23 @@ import pyatl
 def replay(
     strategy, closes: pd.DataFrame, names: list[str], *, cash: str = "100000", shorts: bool = True
 ) -> pyatl.BacktestResult:
-    """Replays daily closes, each bar opening at the instrument's previous close.
+    """Replays daily closes, each bar's open, high and low set to its close.
 
-    A market order decided at close t then fills at close t, the book's convention.
+    A market order decided at close t fills at close t (`fill="decision-close"`), the book's convention.
     """
-    closes = closes[names]
-    opens = closes.ffill().shift().fillna(closes)  # the previous close, carried over missing days
-    c, o = closes.to_numpy(), opens.to_numpy()
+    c = closes[names].to_numpy()
     day, at = np.nonzero(~np.isnan(c))  # in time order, then in the order of names
-    engine = pyatl.Replay(strategy, names, interval="1d", stamp="close", cash=cash, shorts=shorts)
+    close = c[day, at]
+    engine = pyatl.Replay(
+        strategy, names, interval="1d", stamp="close", cash=cash, shorts=shorts, fill="decision-close"
+    )
     engine.feed_bars(
         at,
         closes.index.to_numpy()[day],
-        open=o[day, at],
-        high=np.maximum(c, o)[day, at],
-        low=np.minimum(c, o)[day, at],
-        close=c[day, at],
+        open=close,
+        high=close,
+        low=close,
+        close=close,
         volume=np.full(len(day), 100000.0),
     )
     return engine.finish()
